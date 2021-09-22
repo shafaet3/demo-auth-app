@@ -7,9 +7,14 @@ module.exports = {
   SECRET: process.env.APP_SECRET,
   service: process.env.EMAIL_SERVICE,
   host: process.env.EMAIL_HOST,
-  from: process.env.EMAIL_AUTH_USER,
+  from: [
+    {
+      name: process.env.EMAIL_AUTH_USER_NAME,
+      address: process.env.EMAIL_AUTH_USER_EMAIL,
+    },
+  ],
   auth: {
-    user: process.env.EMAIL_AUTH_USER,
+    user: process.env.EMAIL_AUTH_USER_EMAIL,
     pass: process.env.EMAIL_AUTH_PASS,
   },
 };

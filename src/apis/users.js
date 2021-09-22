@@ -1,14 +1,19 @@
 import { randomBytes } from "crypto";
 import { Router } from "express";
 import { join } from "path";
-import sendEmailWithVerificationCode from "../functions/email/sendEmail";
+import { userAuth } from "../middlewares/auth-guard";
 import Validator from "../middlewares/validator-middleware";
 import { User } from "../models";
 import {
-  RegisterValidations,
+  sendEmailWithForgetPasswordLink,
+  sendEmailPasswordChangedSuccessful,
+} from "../functions/email/sendEmail";
+import {
   AuthenticateValidations,
+  RegisterValidations,
+  ForgetPasswordValidations,
 } from "../validators/user-validators";
-import { userAuth } from "../middlewares/auth-guard";
+import passport from "passport";
 
 const router = Router();
 
@@ -50,9 +55,6 @@ router.post(
       });
       await user.save();
 
-      // send email to the user with verification code
-      await sendEmailWithVerificationCode(user).catch(console.error);
-
       return res.status(201).json({
         success: true,
         message: "Your account is created please verify your email address",
@@ -66,8 +68,8 @@ router.post(
   }
 );
 
-// /verify-now/:verificationCode VERIFY User Account
-router.get("/verify-now/:verificationCode", async (req, res) => {
+// /email-verify/:verificationCode VERIFY User Account
+router.get("/email-verify/:verificationCode", async (req, res) => {
   try {
     let { verificationCode } = req.params;
     let user = await User.findOne({ verificationCode });
@@ -81,16 +83,16 @@ router.get("/verify-now/:verificationCode", async (req, res) => {
     user.verificationCode = undefined;
     await user.save();
     return res.sendFile(
-      join(__dirname, "../templates/verification-success.html")
+      join(__dirname, "../templates/email-verification-success.html")
     );
   } catch (error) {
     return res.sendFile(join(__dirname, "../templates/errors.html"));
   }
 });
 
-// /api/authenticate LOGIN user
+// /api/login LOGIN user
 router.post(
-  "/api/authenticate",
+  "/api/login",
   AuthenticateValidations,
   Validator,
   async (req, res) => {
@@ -111,7 +113,7 @@ router.post(
         });
       }
       let token = await user.generateJWT();
-      if (user.verified == true) {
+      if (user.verified === true) {
         return res.status(200).json({
           success: true,
           user: user.getUserInfo(),
@@ -133,8 +135,8 @@ router.post(
   }
 );
 
-// /api/authenticate GET Users
-router.get("/api/authenticate", userAuth, async (req, res) => {
+// /api/user-authenticate GET User
+router.get("/api/user-authenticate", userAuth, async (req, res) => {
   return res.status(200).json({
     user: req.user,
     success: true,
@@ -142,4 +144,100 @@ router.get("/api/authenticate", userAuth, async (req, res) => {
   });
 });
 
+// /api/forget-password
+router.post(
+  "/api/forget-password",
+  ForgetPasswordValidations,
+  Validator,
+  async (req, res) => {
+    try {
+      let { email } = req.body;
+      let user = await User.findOne({ email });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User with this email is not found",
+        });
+      }
+
+      user.generateForgetPassword();
+
+      // send forget password link to email
+      await sendEmailWithForgetPasswordLink(user).catch(console.error);
+
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Forget password link is sent to your email",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "An error occurred.",
+      });
+    }
+  }
+);
+
+//get forget password token
+router.get("/forget-password/:forgetPasswordToken", async (req, res) => {
+  try {
+    let { forgetPasswordToken } = req.params;
+    let user = await User.findOne({
+      forgetPasswordToken,
+      forgetPasswordExpiresIn: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Forget password token is invalid or has expired.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Successfully get forget password token",
+      user,
+    });
+  } catch (error) {
+    return res.sendFile(join(__dirname, "../templates/errors.html"));
+  }
+});
+
+router.post("/api/change-password", async (req, res) => {
+  try {
+    let { password, forgetPasswordToken } = req.body;
+    let user = await User.findOne({
+      forgetPasswordToken,
+      forgetPasswordExpiresIn: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Forget password token is invalid or has expired.",
+      });
+    }
+    user.password = password;
+    user.forgetPasswordToken = undefined;
+    user.forgetPasswordExpiresIn = undefined;
+
+    // send password changed successful notification to email
+    await sendEmailPasswordChangedSuccessful(user).catch(console.error);
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Successfully changed password",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred.",
+    });
+  }
+});
 export default router;

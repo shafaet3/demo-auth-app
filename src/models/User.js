@@ -36,11 +36,15 @@ const UserSchema = new Schema(
       type: String,
       required: false,
     },
-    resetPasswordToken: {
+    isVerificationEmailSent: {
+      type: Boolean,
+      default: false,
+    },
+    forgetPasswordToken: {
       type: String,
       required: false,
     },
-    resetPasswordExpiresIn: {
+    forgetPasswordExpiresIn: {
       type: Date,
       required: false,
     },
@@ -72,9 +76,9 @@ UserSchema.methods.generateJWT = async function () {
   return await sign(payload, SECRET, { expiresIn: "1 day" });
 };
 
-UserSchema.methods.generatePasswordReset = function () {
-  this.resetPasswordExpiresIn = Date.now() + 36000000;
-  this.resetPasswordToken = randomBytes(20).toString("hex");
+UserSchema.methods.generateForgetPassword = function () {
+  this.forgetPasswordExpiresIn = Date.now() + 36000000;
+  this.forgetPasswordToken = randomBytes(20).toString("hex");
 };
 
 UserSchema.methods.getUserInfo = function () {
