@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import passport from "passport";
 import { DB, PORT } from "./src/constants";
 import userApis from "./src/apis/users";
+import startCronJob from "./src/functions/startCronJob";
 require("./src/middlewares/passport-middleware");
 
 const app = express();
@@ -19,6 +20,8 @@ const main = async () => {
     await mongoose.connect(DB);
 
     console.log(`DB Connected Successfully`);
+
+    startCronJob();
 
     app.listen(PORT, () => {
       console.log(`Server app listening at http://localhost:${PORT}`);
