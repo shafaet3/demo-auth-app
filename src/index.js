@@ -2,10 +2,10 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import passport from "passport";
-import { DB, PORT } from "./src/constants";
-import userApis from "./src/apis/users";
-import startCronJob from "./src/functions/startCronJob";
-require("./src/middlewares/passport-middleware");
+import { DB, PORT } from "./config";
+import organizerRoutes from "./api/routes/organizer.router";
+import startCronJob from "./api/helpers/startCronJob";
+require("./api/middlewares/passport-middleware");
 
 const app = express();
 
@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
 
-app.use("/users", userApis);
+app.use("/org", organizerRoutes);
 
 const main = async () => {
   try {

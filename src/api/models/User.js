@@ -2,7 +2,7 @@ const { Schema, model } = require("mongoose");
 import { compare, hash } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { randomBytes } from "crypto";
-import { SECRET } from "../constants";
+import { SECRET } from "../../config";
 import { pick } from "lodash";
 
 const UserSchema = new Schema(

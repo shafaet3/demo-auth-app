@@ -1,4 +1,4 @@
-import { DOMAIN, from } from "../../constants";
+import { DOMAIN, from } from "../../../config";
 import transporter from "./transporter";
 
 export const sendEmailWithVerificationCode = async ({
@@ -18,8 +18,10 @@ export const sendEmailWithVerificationCode = async ({
       subject: "Verify Account",
       html: `<h1>Hello, ${username}</h1>
       <p>Please click the following link to verify your account</p>
-      <button><a href="${DOMAIN}/users/email-verify/${verificationCode}">Verify Now</a></button>`,
+      <button><a href="${DOMAIN}/org/email-verify/${verificationCode}">Verify Now</a></button>`,
     };
+
+    // http://localhost:4000/users/email-verify/107603e5b42b430e41adce53dcebcc056822ed9f
 
     let info = await transporter.sendMail(mailOptions);
 
@@ -77,7 +79,7 @@ export const sendEmailWithForgetPasswordLink = async ({
       html: `<h1>Hello, ${username}</h1>
       <strong style="color:red;">If this password change request is not created by you then you can ignore this email.</strong>
       <p>Please click the following link to change your password</p>
-      <button><a href="${DOMAIN}/users/forget-password/${forgetPasswordToken}">Change Password</a></button>`,
+      <button><a href="${DOMAIN}/org/forget-password/${forgetPasswordToken}">Change Password</a></button>`,
     };
 
     let info = await transporter.sendMail(mailOptions);
@@ -114,7 +116,7 @@ export const sendEmailPasswordChangedSuccessful = async ({
       // ],
       subject: "Password Changed",
       html: `<h1>Hello, ${username}</h1></br>
-      <strong style="color:green;">Congrats!!! Your password has been changed successfully.</strong>`,
+      <h2><strong style="color:green;">Congrats!!! Your password has been changed successfully.</strong></h2>`,
     };
 
     let info = await transporter.sendMail(mailOptions);

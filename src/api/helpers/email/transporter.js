@@ -1,4 +1,4 @@
-import { service, host, auth } from "../../constants";
+import { service, host, auth } from "../../../config";
 const smtpTransport = require("nodemailer-smtp-transport");
 const nodemailer = require("nodemailer");
 

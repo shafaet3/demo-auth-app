@@ -8,6 +8,6 @@ const password = check(
   "Password is required of minimum length of 6"
 ).isLength({ min: 6 });
 
-export const RegisterValidations = [name, username, email, password];
-export const AuthenticateValidations = [username, password];
-export const ForgetPasswordValidations = [email];
+export const SignUpValidation = [name, username, email, password];
+export const AuthValidation = [username, password];
+export const ForgetPassValidation = [email];

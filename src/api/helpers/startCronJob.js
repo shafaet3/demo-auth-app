@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { sendEmailWithVerificationCode } from "../functions/email/sendEmail";
+import { sendEmailWithVerificationCode } from "./email/sendEmail";
 import { User } from "../models";
 
 const startCronJob = async () => {
